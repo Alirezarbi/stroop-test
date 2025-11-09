@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>آزمون استروپ — موبایل (عمودی)</title>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--text:#e6eef8}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071024,#0b1530);font-family:Tahoma,Arial,Helvetica,sans-serif;color:var(--text);direction:rtl;overflow:hidden}
+    .container{width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px 10px 0;box-sizing:border-box;position:relative;}
+    .card{width:100%;max-width:480px;background:rgba(255,255,255,0.03);border-radius:16px;padding:20px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;flex:1;gap:16px;box-shadow:0 8px 32px rgba(0,0,0,0.3);}
+    h1{margin:0 0 8px;font-size:22px;text-align:center}
+    p{margin:8px 0;opacity:0.9;text-align:center;font-size:15px;line-height:1.5}
+    .stimulus{
+      flex:1;display:flex;align-items:center;justify-content:center;
+      font-size:calc(28px + 12vw);
+      font-weight:700;text-align:center;
+      min-height:240px;
+      width:100%;
+    }
+    .buttons{
+      width:100%;display:flex;gap:12px;
+      position:fixed;bottom:20px;left:0;right:0;
+      padding:0 20px;box-sizing:border-box;z-index:10;
+    }
+    .btn{
+      flex:1;padding:16px 0;border-radius:12px;
+      font-size:18px;font-weight:700;color:white;
+      border:0;text-align:center;touch-action:manipulation;
+      box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    }
+    .btn:active{transform:translateY(2px);opacity:0.8}
+    .btn.green{background:#16a34a}
+    .btn.red{background:#ef4444}
+    .btn.blue{background:#2563eb}
+    .start-btn{padding:14px 24px;border-radius:12px;font-size:17px;background:#6366f1;color:white;border:none;margin-top:20px;cursor:pointer;}
+    .fullscreen-start{
+      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      padding:20px 40px;font-size:20px;background:#818cf8;color:white;
+      border:none;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.4);
+      z-index:9999;cursor:pointer;font-weight:700;
+    }
+    .results{font-size:17px;text-align:center;line-height:1.6}
+    table{width:100%;border-collapse:collapse;margin:16px 0;background:rgba(255,255,255,0.02);border-radius:8px;overflow:hidden;}
+    td,th{border:1px solid rgba(255,255,255,0.08);padding:10px;text-align:center;font-size:14px;}
+    th{background:rgba(255,255,255,0.05);}
+    .muted{opacity:0.8;font-size:14px;}
+    .hidden{display:none !important;}
+  </style>
+</head>
+<body>
+
+  <!-- دکمه شروع و تمام‌صفحه -->
+  <button id="fullscreenStart" class="fullscreen-start">
+    شروع آزمون<br><small>تمام‌صفحه می‌شود</small>
+  </button>
+
+  <div class="container" id="mainContainer" style="display:none;">
+    <div class="card" id="cardContainer">
+      <h1 id="title">آزمون استروپ (نسخهٔ موبایل — عمودی)</h1>
+      
+      <div id="intro">
+        <p class="muted">در این آزمون باید روی <strong>رنگ خط</strong> کلیک کنید، نه معنی کلمه.</p>
+        <p>سریع و دقیق پاسخ دهید.</p>
+        <p>ابتدا چند تمرین دارید، سپس آزمون اصلی شروع می‌شود.</p>
+        <button id="startPractice" class="start-btn">شروع تمرین</button>
+      </div>
+
+      <div id="task" style="display:none;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+        <div id="stimulus" class="stimulus">—</div>
+      </div>
+
+      <div id="end" style="display:none;width:100%;padding:10px 0;">
+        <div class="results" id="results"></div>
+        <button id="nextPhase" class="start-btn" style="display:none;margin-top:16px;">بریم سراغ آزمون اصلی</button>
+        <button id="restart" class="start-btn" style="margin-top:16px;">تکرار آزمون</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- دکمه‌های رنگ -->
+  <div class="buttons" id="colorButtons" style="display:none;">
+    <button class="btn green" data-color="green">سبز</button>
+    <button class="btn red" data-color="red">قرمز</button>
+    <button class="btn blue" data-color="blue">آبی</button>
+  </div>
+
+<script>
+  // درخواست تمام‌صفحه + قفل عمودی
+  document.getElementById('fullscreenStart').addEventListener('click', function() {
+    // مخفی کردن دکمه شروع
+    this.classList.add('hidden');
+    
+    // نمایش محتوای اصلی
+    document.getElementById('mainContainer').style.display = 'flex';
+
+    // درخواست تمام‌صفحه
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      document.documentElement.webkitRequestFullscreen();
+    } else if (document.documentElement.msRequestFullscreen) {
+      document.documentElement.msRequestFullscreen();
+    }
+
+    // قفل کردن در حالت عمودی (اگر مرورگر ساپورت کنه)
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('portrait').catch(() => {});
+    }
+  });
+
+  const words=[{text:'سبز',key:'green'},{text:'قرمز',key:'red'},{text:'آبی',key:'blue'}];
+  const colorMap={green:'#16a34a',red:'#ef4444',blue:'#2563eb'};
+  const PRACTICE_TRIALS=10;
+  const MAIN_TRIALS=60;
+  let trials=[];
+  let trialIndex=0;
+  let startTime=0;
+  let results=[];
+  let isPractice=true;
+  let isStimulusVisible=false;
+  let isResponseWindow=false;
+  let responseRecorded=false;
+  let showCrossTimeout=null;
+  let stimulusHideTimeout=null;
+
+  const intro=document.getElementById('intro');
+  const title=document.getElementById('title');
+  const startPractice=document.getElementById('startPractice');
+  const task=document.getElementById('task');
+  const stimulusEl=document.getElementById('stimulus');
+  const colorButtons=document.getElementById('colorButtons');
+  const colorBtns=document.querySelectorAll('.btn');
+  const endDiv=document.getElementById('end');
+  const resultsEl=document.getElementById('results');
+  const restartBtn=document.getElementById('restart');
+  const nextPhaseBtn=document.getElementById('nextPhase');
+  const cardContainer=document.getElementById('cardContainer');
+
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a}
+  
+  function generateTrials(n){
+    const arr=[];
+    const congCount=Math.round(n/3);
+    const incongCount=n-congCount;
+    for(let i=0;i<congCount;i++){
+      const c=words[Math.floor(Math.random()*words.length)];
+      arr.push({word:c.text,fontColor:c.key,congruent:true});
+    }
+    for(let i=0;i<incongCount;i++){
+      const w=words[Math.floor(Math.random()*words.length)];
+      let c=words[Math.floor(Math.random()*words.length)];
+      while(c.key===w.key){c=words[Math.floor(Math.random()*words.length)];}
+      arr.push({word:w.text,fontColor:c.key,congruent:false});
+    }
+    return shuffle(arr);
+  }
+
+  function startExperiment(){
+    clearAllTimers();
+    intro.style.display='none';
+    title.style.display='none';
+    endDiv.style.display='none';
+    cardContainer.style.background='none';
+    task.style.display='flex';
+    colorButtons.style.display='flex';
+    results=[];
+    trialIndex=0;
+    trials=generateTrials(isPractice?PRACTICE_TRIALS:MAIN_TRIALS);
+    showCross();
+  }
+
+  function clearAllTimers(){
+    if(showCrossTimeout){ clearTimeout(showCrossTimeout); showCrossTimeout=null; }
+    if(stimulusHideTimeout){ clearTimeout(stimulusHideTimeout); stimulusHideTimeout=null; }
+  }
+
+  function showCross(){
+    stimulusEl.textContent='+';
+    stimulusEl.style.color='#fff';
+    stimulusEl.style.visibility='visible';
+    isStimulusVisible=true;
+    showCrossTimeout=setTimeout(()=>{
+      stimulusEl.style.visibility='hidden';
+      isStimulusVisible=false;
+      startTrial();
+    },800);
+  }
+
+  function startTrial(){
+    if(trialIndex>=trials.length){ finish(); return; }
+    const t=trials[trialIndex];
+    stimulusEl.textContent=t.word;
+    stimulusEl.style.color=colorMap[t.fontColor];
+    stimulusEl.style.visibility='visible';
+    isStimulusVisible=true;
+    responseRecorded=false;
+    isResponseWindow=false;
+    startTime=performance.now();
+    stimulusHideTimeout=setTimeout(()=>{
+      stimulusEl.style.visibility='hidden';
+      isStimulusVisible=false;
+      isResponseWindow=true;
+      setTimeout(()=>{
+        isResponseWindow=false;
+        if(!responseRecorded){
+          const expected=t.fontColor;
+          results.push({trial:trialIndex+1,selected:null,expected,correct:false,rt:null,congruent:t.congruent});
+        }
+        trialIndex++;
+        if(trialIndex<trials.length){
+          showCross();
+        }else{
+          finish();
+        }
+      },2000);
+    },300);
+  }
+
+  function recordResponse(color){
+    if(!(isStimulusVisible||isResponseWindow))return;
+    if(responseRecorded)return;
+    const rt=Math.round(performance.now()-startTime);
+    const t=trials[trialIndex];
+    const correct=(color===t.fontColor);
+    results.push({trial:trialIndex+1,selected:color,expected:t.fontColor,correct,rt,congruent:t.congruent});
+    responseRecorded=true;
+  }
+
+  colorBtns.forEach(btn=>{
+    btn.addEventListener('click',e=>{recordResponse(e.currentTarget.getAttribute('data-color'));},{passive:true});
+  });
+
+  function mean(arr){if(!arr.length)return 0;return Math.round(arr.reduce((s,v)=>s+v,0)/arr.length)}
+
+  function finish(){
+    clearAllTimers();
+    task.style.display='none';
+    colorButtons.style.display='none';
+    title.style.display='block';
+    cardContainer.style.background='rgba(255,255,255,0.03)';
+    endDiv.style.display='flex';
+
+    const totalCong=trials.filter(t=>t.congruent).length;
+    const totalIncon=trials.filter(t=>!t.congruent).length;
+    const correctCongResults=results.filter(r=>r.correct&&r.congruent);
+    const correctInconResults=results.filter(r=>r.correct&&!r.congruent);
+    const correctCongCount=correctCongResults.length;
+    const correctInconCount=correctInconResults.length;
+    const meanRTCong=correctCongResults.length?mean(correctCongResults.map(r=>r.rt)):'-';
+    const meanRTIncon=correctInconResults.length?mean(correctInconResults.map(r=>r.rt)):'-';
+    const overallCorrect=results.filter(r=>r.correct).length;
+    const overallMeanRT=mean(results.filter(r=>r.correct).map(r=>r.rt));
+    const accCong=totalCong?Math.round((correctCongCount/totalCong)*100):0;
+    const accIncon=totalIncon?Math.round((correctInconCount/totalIncon)*100):0;
+    const accOverall=results.length?Math.round((overallCorrect/results.length)*100):0;
+
+    const tableHTML=`
+      <table>
+        <tr><th>شاخص</th><th>مقدار</th></tr>
+        <tr><td>همخوان</td><td>${correctCongCount}/${totalCong} (${accCong}%)</td></tr>
+        <tr><td>ناهمخوان</td><td>${correctInconCount}/${totalIncon} (${accIncon}%)</td></tr>
+        <tr><td>میانگین RT همخوان</td><td>${meanRTCong} ms</td></tr>
+        <tr><td>میانگین RT ناهمخوان</td><td>${meanRTIncon} ms</td></tr>
+        <tr><td>میانگین RT کل</td><td>${overallMeanRT} ms</td></tr>
+        <tr><td>دقت کل</td><td>${accOverall}%</td></tr>
+      </table>
+    `;
+
+    if(isPractice){
+      resultsEl.innerHTML=`<strong>تمرین تمام شد!</strong><br><br>`+tableHTML;
+      nextPhaseBtn.style.display='inline-block';
+      restartBtn.style.display='none';
+    }else{
+      resultsEl.innerHTML=`<strong>آزمون اصلی تمام شد!</strong><br><br>`+tableHTML;
+      nextPhaseBtn.style.display='none';
+      restartBtn.style.display='inline-block';
+    }
+  }
+
+  startPractice.addEventListener('click',()=>{isPractice=true;startExperiment();});
+  nextPhaseBtn.addEventListener('click',()=>{isPractice=false;startExperiment();});
+  restartBtn.addEventListener('click',()=>{
+    intro.style.display='block';
+    title.style.display='block';
+    endDiv.style.display='none';
+    cardContainer.style.background='rgba(255,255,255,0.03)';
+    colorButtons.style.display='none';
+  });
+
+  window.addEventListener('touchmove',function(e){
+    if(e.target.closest('.buttons')) e.preventDefault();
+  },{passive:false});
+</script>
+</body>
+</html>
